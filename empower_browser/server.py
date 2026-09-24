@@ -37,7 +37,10 @@ async def ingress_only(request, handler):
     if request.method == "POST" and request.headers.get("X-Empower-Action") != "1":
         raise web.HTTPForbidden(text="Use the app controls.")
     try:
-        return await handler(request)
+        response = await handler(request)
+        if not response.prepared:
+            response.headers["Cache-Control"] = "no-cache"
+        return response
     except web.HTTPException:
         raise
     except Exception:
@@ -193,7 +196,7 @@ def main():
     if not 6 <= refresh_hours <= 168:
         raise ValueError("Invalid refresh interval")
     # These children never receive the Supervisor token.
-    env = {"PATH": "/usr/bin:/bin", "DISPLAY": ":99", "HOME": "/home/browser"}
+    env = {"PATH": "/usr/sbin:/usr/bin:/sbin:/bin", "DISPLAY": ":99", "HOME": "/home/browser"}
     children = []
     try:
         children.append(subprocess.Popen(["Xvfb", ":99", "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-ac"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
@@ -203,6 +206,8 @@ def main():
             if children[0].poll() is not None:
                 raise RuntimeError("Display failed")
             time.sleep(0.1)
+        # Manage X11 focus so Chromium receives physical and virtual key events.
+        children.append(subprocess.Popen(["runuser", "-u", "browser", "--", "openbox"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
         children.append(subprocess.Popen(["x11vnc", "-display", ":99", "-localhost", "-forever", "-shared", "-nopw", "-rfbport", "5900", "-quiet"], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL))
         web.run_app(create_app(refresh_hours=refresh_hours), host="0.0.0.0", port=8099, access_log=None, print=None)
     finally:

@@ -2,20 +2,24 @@
 <html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <base href="__INGRESS_BASE__"><title>Empower electricity</title>
 <style>
-body{margin:0;background:#111827;color:#f3f4f6;font:16px system-ui}header{padding:18px 24px}h1{font-size:22px;margin:0 0 8px}p{margin:8px 0;color:#d1d5db}button{padding:10px 14px;margin:6px 8px 6px 0;border:0;border-radius:6px;background:#2563eb;color:white;font:inherit;cursor:pointer}button:disabled{opacity:.5}#screen{height:74vh;background:#000}#status{white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:14px}small{color:#9ca3af}
+body{margin:0;background:#111827;color:#f3f4f6;font:16px system-ui}header{padding:18px 24px}h1{font-size:22px;margin:0 0 8px}p{margin:8px 0;color:#d1d5db}button{padding:10px 14px;margin:6px 8px 6px 0;border:0;border-radius:6px;background:#2563eb;color:white;font:inherit;cursor:pointer}button:disabled{opacity:.5}#screen{height:74vh;width:100%;border:0;display:block;background:#000}#status{white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:14px}small{color:#9ca3af}
 </style>
 <header><h1>Empower electricity</h1>
 <p>Sign in below and open your electricity dashboard, then read it. Your session stays on this Home Assistant device.</p>
 <button id="read">Read dashboard</button><button id="refresh">Refresh and read</button><button id="login">Open login</button>
-<p id="status">Connecting…</p><small>Daily refresh uses your saved session. If Empower requires sign-in again, return here. Keep the browser on Empower.</small>
-</header><div id="screen"></div>
+<p id="status">Connecting…</p><small>Daily refresh uses your saved session. If Empower requires sign-in again, return here. Click the login field before typing. On touch devices, open the remote desktop toolbar and tap its keyboard icon.</small>
+</header><iframe id="screen" title="Empower remote browser" allow="fullscreen"></iframe>
 <script type="module">
-import RFB from './novnc/core/rfb.js';
-// Relative paths preserve Home Assistant's ingress prefix.
+// Use noVNC's full client for focus, touch keyboard and special-key controls.
 const root = new URL('./', document.baseURI);
-const socket = new URL('desktop', root); socket.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-const rfb = new RFB(document.getElementById('screen'), socket.href);
-rfb.scaleViewport = true; rfb.resizeSession = false;
+const desktop = new URL('novnc/vnc.html', root);
+desktop.hash = new URLSearchParams({
+ autoconnect: '1', resize: 'scale', view_only: '0', logging: 'error',
+ host: location.hostname, port: location.port || (location.protocol === 'https:' ? '443' : '80'),
+ encrypt: location.protocol === 'https:' ? '1' : '0',
+ path: new URL('desktop', root).pathname.replace(/^\//, '')
+}).toString();
+document.getElementById('screen').src = desktop.href;
 const status = document.getElementById('status');
 async function update() {
  try { const response = await fetch(new URL('status', root)); const data = await response.json();

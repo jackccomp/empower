@@ -27,3 +27,7 @@ The app cannot verify that you selected the correct electricity meter when an ac
 ## Status
 
 This package was authored for Home Assistant OS 18.3 / Core 2026.9.3 on Home Assistant Blue. It has not been container-built or run on an ODROID in the development environment. ARM64 browser startup, Ingress, login acceptance and resource use require the installation test. Keep it experimental until those checks pass.
+
+## Typing in the login form
+
+Click the username field inside the remote browser before typing. On phones/tablets, open the noVNC toolbar using the handle at the left edge of the remote desktop, then tap its keyboard icon. Type the password directly into the portal. Version 0.1.1 adds the full remote desktop controls and a window manager for keyboard focus. After updating, close and reopen the app web UI to reload it. This fix still needs confirmation on the real device.
