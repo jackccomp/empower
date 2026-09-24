@@ -1,0 +1,32 @@
+{
+  "title": "Empower Naperville",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Empower electricity",
+        "description": "Receives one electricity meter from the Empower Browser app running on Home Assistant OS. Timestamp settings interpret a continuous sequence of 15-minute elapsed intervals. Historical Energy import starts disabled. Check the graph and timezone before enabling it.",
+        "data": {
+          "time_zone": "Meter time zone (IANA name)",
+          "timestamp_label": "Timestamps mark interval start or end"
+        }
+      }
+    },
+    "error": {
+      "invalid_timezone": "Enter a valid IANA timezone, for example America/Chicago."
+    },
+    "abort": {
+      "already_configured": "This single-meter integration is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Historical Energy import",
+        "description": "Enable only after confirming kWh units, start/end labels, the configured timezone, and that readings are consecutive 15-minute elapsed intervals across daylight-saving changes. Re-upload after enabling. Disabling stops future imports but does not delete statistics already stored.",
+        "data": {
+          "import_statistics": "I have verified the timestamp and kWh assumptions; import Energy history"
+        }
+      }
+    }
+  }
+}

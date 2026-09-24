@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<base href="__INGRESS_BASE__"><title>Empower electricity</title>
+<style>
+body{margin:0;background:#111827;color:#f3f4f6;font:16px system-ui}header{padding:18px 24px}h1{font-size:22px;margin:0 0 8px}p{margin:8px 0;color:#d1d5db}button{padding:10px 14px;margin:6px 8px 6px 0;border:0;border-radius:6px;background:#2563eb;color:white;font:inherit;cursor:pointer}button:disabled{opacity:.5}#screen{height:74vh;background:#000}#status{white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:14px}small{color:#9ca3af}
+</style>
+<header><h1>Empower electricity</h1>
+<p>Sign in below and open your electricity dashboard, then read it. Your session stays on this Home Assistant device.</p>
+<button id="read">Read dashboard</button><button id="refresh">Refresh and read</button><button id="login">Open login</button>
+<p id="status">Connecting…</p><small>Daily refresh uses your saved session. If Empower requires sign-in again, return here. Keep the browser on Empower.</small>
+</header><div id="screen"></div>
+<script type="module">
+import RFB from './novnc/core/rfb.js';
+// Relative paths preserve Home Assistant's ingress prefix.
+const root = new URL('./', document.baseURI);
+const socket = new URL('desktop', root); socket.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const rfb = new RFB(document.getElementById('screen'), socket.href);
+rfb.scaleViewport = true; rfb.resizeSession = false;
+const status = document.getElementById('status');
+async function update() {
+ try { const response = await fetch(new URL('status', root)); const data = await response.json();
+ status.textContent = data.message + (data.summary ? `\nReadings: ${data.summary.count}\nFirst: ${data.summary.first} / ${data.summary.first_kwh} kWh\nLatest: ${data.summary.latest} / ${data.summary.latest_kwh} kWh` : '') + (data.last_attempt ? `\nLast attempt: ${data.last_attempt}` : '');
+ } catch { status.textContent = 'Connection lost. Reopen this app from Home Assistant.'; }
+}
+for (const action of ['read','refresh','login']) {
+ document.getElementById(action).onclick = async () => {
+  document.querySelectorAll('button').forEach(b => b.disabled=true);
+  try { await fetch(new URL(action, root), {method:'POST',headers:{'X-Empower-Action':'1'}}); await update(); }
+  finally { document.querySelectorAll('button').forEach(b => b.disabled=false); }
+ };
+}
+setInterval(update, 10000); update();
+</script></html>
